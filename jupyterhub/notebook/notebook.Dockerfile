@@ -1,4 +1,4 @@
-FROM quay.io/jupyter/datascience-notebook:latest
+FROM quay.io/jupyter/datascience-notebook:2024-12-23
 
 ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
