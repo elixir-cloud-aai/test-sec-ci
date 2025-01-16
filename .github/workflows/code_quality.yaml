@@ -20,15 +20,38 @@ jobs:
   #     - name: Set up environment
   #       uses: ./.github/actions/setup/poetry
   #       with:
-  #         os: ${{ job.os }}
-  #         python-version: '3.13.0'
-  #         poetry-install-options: "--only=code_quality --no-root"
-  #         poetry-export-options: "--only=code_quality"
+    #         os: ${{ job.os }}
+    #         python-version: '3.13.0'
+    #         poetry-install-options: "--only=code_quality --no-root"
+    #         poetry-export-options: "--only=code_quality"
 
-  #     - name: Check code style
-  #       run: poetry run ruff format --check
+    #     - name: Check code style
+    #       run: poetry run ruff format --check
 
-  hadolint:
+    # - name: Checkout code
+    #   uses: actions/checkout@v4
+
+    # # - name: Create output directory
+    # #   run: |
+    # #     mkdir -p "$(dirname "hadolint-results-${{ matrix.dockerfile }}.sarif")"
+
+    # - name: Run Hadolint
+    #   uses: hadolint/hadolint-action@v3.1.0
+    #   with:
+    #     dockerfile: ${{ matrix.dockerfile }}
+    #     format: sarif
+    #     output-file: hadolint-results-${{ matrix.dockerfile }}.sarif
+    #     no-fail: true
+    #     ignore: DL3008,DL3013
+
+    # - name: Upload hadolint results to github security tab
+    #   uses: github/codeql-action/upload-sarif@v3
+    #   if: always()
+    #   with:
+    #     sarif_file: hadolint-results-${{ matrix.dockerfile }}.sarif
+    #     wait-for-processing: true
+
+    hadolint:
       name: Dockerfile Lint
       runs-on: ubuntu-latest
       permissions:
@@ -41,34 +64,12 @@ jobs:
             - jupyterhub/hub/hub.Dockerfile
             - jupyterhub/notebook/notebook.Dockerfile
       steps:
-        # - name: Checkout code
-        #   uses: actions/checkout@v4
-
-        # # - name: Create output directory
-        # #   run: |
-        # #     mkdir -p "$(dirname "hadolint-results-${{ matrix.dockerfile }}.sarif")"
-
-        # - name: Run Hadolint
-        #   uses: hadolint/hadolint-action@v3.1.0
-        #   with:
-        #     dockerfile: ${{ matrix.dockerfile }}
-        #     format: sarif
-        #     output-file: hadolint-results-${{ matrix.dockerfile }}.sarif
-        #     no-fail: true
-        #     ignore: DL3008,DL3013
-
-        # - name: Upload hadolint results to github security tab
-        #   uses: github/codeql-action/upload-sarif@v3
-        #   if: always()
-        #   with:
-        #     sarif_file: hadolint-results-${{ matrix.dockerfile }}.sarif
-        #     wait-for-processing: true
         - name: Checkout code
           uses: actions/checkout@v4
 
         - name: Sanitize Dockerfile name
           id: sanitize_name
-          run: echo "::set-output name=safe_name::${{ matrix.dockerfile//\//_ }}"
+          run: echo "safe_name=${{ matrix.dockerfile//\//_ }}" >> $GITHUB_OUTPUT
 
         - name: Run Hadolint
           uses: hadolint/hadolint-action@v3.1.0
