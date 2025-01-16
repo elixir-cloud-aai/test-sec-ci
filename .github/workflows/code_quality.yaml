@@ -1,0 +1,119 @@
+---
+name: Code quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/actions/setup/poetry
+        with:
+          os: ${{ job.os }}
+          python-version: '3.13.0'
+          poetry-install-options: "--only=code_quality --no-root"
+          poetry-export-options: "--only=code_quality"
+
+      - name: Check code style
+        run: poetry run ruff format --check
+
+  hadolint:
+      name: Dockerfile Lint
+      runs-on: ubuntu-latest
+      permissions:
+        actions: read
+        contents: read
+        security-events: write
+      strategy:
+        matrix:
+          dockerfile:
+            - jupyterhub/hub/hub.Dockerfile
+            - jupyterhub/notebook/notebook.Dockerfile
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Create output directory
+          run: |
+            mkdir -p "$(dirname "hadolint-results-${{ matrix.dockerfile }}.sarif")"
+
+        - name: Run Hadolint
+          uses: hadolint/hadolint-action@v3.1.0
+          with:
+            dockerfile: ${{ matrix.dockerfile }}
+            format: sarif
+            output-file: hadolint-results-${{ matrix.dockerfile }}.sarif
+            ignore: DL3008,DL3013
+
+        - name: Upload hadolint results to github security tab
+          uses: github/codeql-action/upload-sarif@v3
+          if: always()
+          with:
+            sarif_file: hadolint-results-${{ matrix.dockerfile }}.sarif
+            category: hadolint-${{ matrix.dockerfile }}
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/actions/setup/poetry
+        with:
+          os: ${{ job.os }}
+          python-version: '3.13.0'
+          poetry-install-options: "--only=code_quality --no-root"
+          poetry-export-options: "--only=code_quality"
+
+      - name: Check code quality
+        run: poetry run ruff check .
+
+  spell-check:
+    name: Spell check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/actions/setup/poetry
+        with:
+          os: ${{ job.os }}
+          python-version: '3.13.0'
+          poetry-install-options: "--only=code_quality --no-root"
+          poetry-export-options: "--only=code_quality"
+
+      - name: Check spellings
+        run: poetry run typos .
+
+  type-check:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/actions/setup/poetry
+        with:
+          os: ${{ job.os }}
+          python-version: '3.13.0'
+          poetry-install-options: "--with=code_quality --with=types --no-root"
+          poetry-export-options: "--with=code_quality --with=types"
+
+      - name: Check types
+        run: poetry run mypy jupyterhub/
+...
