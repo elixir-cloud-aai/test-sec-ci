@@ -70,7 +70,7 @@ jobs:
         - name: Sanitize Dockerfile name
           id: sanitize_name
           run: |
-            IMAGE_NAME="$(basename '${{ matrix.dockerfile }}' | tr -d '.Dockerfile'):${{github.sha}}"
+            IMAGE_NAME="$(basename '${{ matrix.dockerfile }}' | sed 's/.Dockerfile//'):${{github.sha}}"
             echo "safe_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
         - name: Run Hadolint
