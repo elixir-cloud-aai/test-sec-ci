@@ -6,6 +6,6 @@ RUN chmod +x /tini
 
 WORKDIR /srv/jupyterhub
 
-ENTRYPOINT ["tini", "--"]
+ENTRYPOINT ["/tini", "--"]
 
 CMD ["start-notebook.py"]
