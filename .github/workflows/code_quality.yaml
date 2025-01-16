@@ -41,27 +41,49 @@ jobs:
             - jupyterhub/hub/hub.Dockerfile
             - jupyterhub/notebook/notebook.Dockerfile
       steps:
+        # - name: Checkout code
+        #   uses: actions/checkout@v4
+
+        # # - name: Create output directory
+        # #   run: |
+        # #     mkdir -p "$(dirname "hadolint-results-${{ matrix.dockerfile }}.sarif")"
+
+        # - name: Run Hadolint
+        #   uses: hadolint/hadolint-action@v3.1.0
+        #   with:
+        #     dockerfile: ${{ matrix.dockerfile }}
+        #     format: sarif
+        #     output-file: hadolint-results-${{ matrix.dockerfile }}.sarif
+        #     no-fail: true
+        #     ignore: DL3008,DL3013
+
+        # - name: Upload hadolint results to github security tab
+        #   uses: github/codeql-action/upload-sarif@v3
+        #   if: always()
+        #   with:
+        #     sarif_file: hadolint-results-${{ matrix.dockerfile }}.sarif
+        #     wait-for-processing: true
         - name: Checkout code
           uses: actions/checkout@v4
 
-        # - name: Create output directory
-        #   run: |
-        #     mkdir -p "$(dirname "hadolint-results-${{ matrix.dockerfile }}.sarif")"
+        - name: Sanitize Dockerfile name
+          id: sanitize_name
+          run: echo "::set-output name=safe_name::${{ matrix.dockerfile//\//_ }}"
 
         - name: Run Hadolint
           uses: hadolint/hadolint-action@v3.1.0
           with:
             dockerfile: ${{ matrix.dockerfile }}
             format: sarif
-            output-file: hadolint-results-${{ matrix.dockerfile }}.sarif
+            output-file: hadolint-results-${{ steps.sanitize_name.outputs.safe_name }}.sarif
             no-fail: true
             ignore: DL3008,DL3013
 
-        - name: Upload hadolint results to github security tab
+        - name: Upload hadolint results to GitHub Security tab
           uses: github/codeql-action/upload-sarif@v3
           if: always()
           with:
-            sarif_file: hadolint-results-${{ matrix.dockerfile }}.sarif
+            sarif_file: hadolint-results-${{ steps.sanitize_name.outputs.safe_name }}.sarif
             wait-for-processing: true
 
   lint:
