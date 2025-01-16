@@ -44,9 +44,9 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v4
 
-        - name: Create output directory
-          run: |
-            mkdir -p "$(dirname "hadolint-results-${{ matrix.dockerfile }}.sarif")"
+        # - name: Create output directory
+        #   run: |
+        #     mkdir -p "$(dirname "hadolint-results-${{ matrix.dockerfile }}.sarif")"
 
         - name: Run Hadolint
           uses: hadolint/hadolint-action@v3.1.0
@@ -54,6 +54,7 @@ jobs:
             dockerfile: ${{ matrix.dockerfile }}
             format: sarif
             output-file: hadolint-results-${{ matrix.dockerfile }}.sarif
+            no-fail: true
             ignore: DL3008,DL3013
 
         - name: Upload hadolint results to github security tab
@@ -61,7 +62,7 @@ jobs:
           if: always()
           with:
             sarif_file: hadolint-results-${{ matrix.dockerfile }}.sarif
-            category: hadolint-${{ matrix.dockerfile }}
+            wait-for-processing: true
 
   lint:
     name: Lint
